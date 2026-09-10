@@ -8,7 +8,7 @@
 const HOJE = new Date();
 HOJE.setHours(0, 0, 0, 0);
 
-// Fim do ano letivo — usado para estimar- quantas aulas ainda faltam
+// Fim do ano letivo — usado para estimar quantas aulas ainda faltam
 const FIM_ANO_LETIVO = new Date(2026, 11, 10); // 10/12/2026
 FIM_ANO_LETIVO.setHours(0, 0, 0, 0);
 
@@ -58,7 +58,11 @@ function loadSheetJSONP(spreadsheetId, sheetName) {
       clearTimeout(timeout);
       cleanup();
       if (!response || response.status === "error") {
-        resolve({ error: "sheet_not_found" });
+        let detail = "motivo desconhecido";
+        if (response && response.errors && response.errors[0]) {
+          detail = response.errors[0].detailed_message || response.errors[0].message || detail;
+        }
+        resolve({ error: "api_error", detail });
         return;
       }
       resolve({ data: response.table });
@@ -181,8 +185,10 @@ async function carregarTudo() {
       resultados.push({
         ...cfg,
         erro:
-          resp.error === "sheet_not_found"
-            ? `Aba "${cfg.sheetName}" não encontrada — confira o nome exato no config.`
+          resp.error === "api_error"
+            ? `Erro da planilha: ${resp.detail}`
+            : resp.error === "timeout"
+            ? "Tempo esgotado ao carregar (verifique conexão)."
             : "Não foi possível carregar (rede ou planilha não publicada).",
       });
       continue;
