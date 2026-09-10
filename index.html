@@ -1,12 +1,216 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Meu Site</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Andamento das Aulas 2026 - Tecnologia</title>
+<style>
+  :root{
+    --bg-page:#f4f6f9;
+    --bg-header: linear-gradient(135deg,#1e3a5f 0%,#2d5a8c 100%);
+    --bg-card:#ffffff;
+    --text-primary:#1a2634;
+    --text-secondary:#647184;
+    --text-on-dark:#ffffff;
+    --radius:12px;
+    --gap:16px;
+    --green:#2e9e6f;
+    --amber:#e0a63b;
+    --red:#d3564a;
+    --border:#e7eaf0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg-page);
+    color:var(--text-primary);
+  }
+  .container{max-width:1280px;margin:0 auto;padding:20px;}
+  header.top{
+    background:var(--bg-header);
+    color:var(--text-on-dark);
+    border-radius:var(--radius);
+    padding:22px 26px;
+    margin-bottom:var(--gap);
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  header.top h1{margin:0;font-size:20px;font-weight:700;}
+  header.top p{margin:6px 0 0;font-size:12.5px;color:rgba(255,255,255,.75);}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .filters select{
+    padding:7px 11px;border-radius:8px;border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.12);color:#fff;font-size:13px;
+  }
+  .filters select option{color:#1a2634;}
+  #refreshBtn{
+    padding:7px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.3);
+    background:rgba(255,255,255,.15);color:#fff;font-size:13px;cursor:pointer;
+  }
+  #refreshBtn:hover{background:rgba(255,255,255,.25);}
+
+  .status-bar{
+    font-size:12.5px;color:var(--text-secondary);margin-bottom:var(--gap);
+    display:flex;gap:8px;align-items:center;
+  }
+  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
+  .status-dot.loading{background:var(--amber);animation:pulse 1s infinite;}
+  .status-dot.error{background:var(--red);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .kpi-row{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:var(--gap);margin-bottom:var(--gap);
+  }
+  .kpi-card{
+    background:var(--bg-card);border-radius:var(--radius);padding:16px 18px;
+    box-shadow:0 1px 4px rgba(20,30,50,.08);
+  }
+  .kpi-label{font-size:11.5px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+  .kpi-value{font-size:26px;font-weight:700;}
+  .kpi-sub{font-size:11.5px;color:var(--text-secondary);margin-top:4px;}
+
+  .card{
+    background:var(--bg-card);border-radius:var(--radius);padding:18px 20px;
+    box-shadow:0 1px 4px rgba(20,30,50,.08);margin-bottom:var(--gap);
+  }
+  .card h3{margin:0 0 12px;font-size:14px;font-weight:700;}
+
+  .turmas-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:13px;
+  }
+  .turma-card{
+    background:#fff;border-radius:var(--radius);padding:15px 17px;
+    box-shadow:0 1px 4px rgba(20,30,50,.08);border:1px solid var(--border);
+    cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .turma-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(20,30,50,.12);}
+  .turma-card.err{opacity:.6;cursor:default;}
+  .turma-card .row-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+  .turma-card .nome{font-weight:700;font-size:14.5px;}
+  .badge{font-size:10.5px;padding:3px 9px;border-radius:20px;font-weight:600;}
+  .badge.turno-manha{background:#fff3d6;color:#8a6414;}
+  .badge.turno-tarde{background:#dde8ff;color:#28457a;}
+  .progress-bar-bg{width:100%;height:8px;border-radius:6px;background:#eef0f4;overflow:hidden;margin:7px 0 6px;}
+  .progress-bar-fill{height:100%;border-radius:6px;transition:width .3s ease;}
+  .turma-card .stats{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-secondary);}
+  .pct{font-weight:700;font-size:14px;}
+  .pct.ok{color:var(--green);}
+  .pct.warn{color:var(--amber);}
+  .pct.late{color:var(--red);}
+  .err-msg{font-size:11.5px;color:var(--red);margin-top:4px;}
+
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(15,20,30,.5);
+    align-items:center;justify-content:center;z-index:50;padding:16px;
+  }
+  .modal-overlay.active{display:flex;}
+  .modal{
+    background:#fff;border-radius:var(--radius);max-width:680px;width:100%;
+    max-height:82vh;overflow-y:auto;padding:22px 24px;
+  }
+  .modal h2{margin:0 0 4px;font-size:17px;}
+  .modal .modal-sub{color:var(--text-secondary);font-size:12.5px;margin-bottom:14px;}
+  .close-btn{float:right;cursor:pointer;font-size:20px;color:var(--text-secondary);background:none;border:none;line-height:1;}
+  .lesson-row{display:flex;gap:9px;align-items:flex-start;padding:5px 0;font-size:12.5px;}
+  .lesson-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex:none;}
+  .lesson-dot.realizada{background:var(--green);}
+  .lesson-dot.pendente{background:#cfd6e0;}
+  .lesson-data{font-weight:600;min-width:72px;}
+  .lesson-ativ{color:var(--text-secondary);}
+  .lesson-row.pendente .lesson-ativ{color:#9aa4b2;}
+  footer{text-align:center;font-size:11.5px;color:var(--text-secondary);padding:16px 0 4px;}
+</style>
 </head>
 <body>
-    <h1>Olá, mundo!</h1>
-    <p>Meu primeiro site hospedado no GitHub.</p>
+<div class="container">
+
+  <header class="top">
+    <div>
+      <h1>📊 Andamento das Aulas — Tecnologia 2026</h1>
+      <p>Aulas já dadas por turma, comparado à data de hoje · Colégio Santa Rita</p>
+    </div>
+    <div class="filters">
+      <select id="filterTurno">
+        <option value="todos">Todos os turnos</option>
+        <option value="Manhã">Manhã</option>
+        <option value="Tarde">Tarde</option>
+      </select>
+      <button id="refreshBtn">↻ Atualizar dados</button>
+    </div>
+  </header>
+
+  <div class="status-bar">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">Carregando dados das planilhas…</span>
+  </div>
+
+  <section class="kpi-row" id="kpiRow"></section>
+
+  <section class="card">
+    <h3>Turmas — clique para ver as aulas já dadas</h3>
+    <div class="turmas-grid" id="turmasGrid"></div>
+  </section>
+
+  <footer>Dados ao vivo das planilhas "Cronograma de aulas - 2026" (Manhã) e "Tecnologia: Cronograma de aulas - 2026" (Tarde)</footer>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="close-btn" id="closeModal">&times;</button>
+    <h2 id="modalTitle"></h2>
+    <div class="modal-sub" id="modalSub"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!--
+=====================================================================
+CONFIGURAÇÃO — ajuste aqui sempre que precisar
+=====================================================================
+Cada turma precisa de:
+  - turno: "Manhã" ou "Tarde"
+  - serie: usada só para ordenar (ex: "1º","2º"..."9º")
+  - turma: nome exibido no card
+  - spreadsheetId: o ID da planilha (está na URL normal do Sheets,
+    entre /d/ e /edit — NÃO é o link de "Publicar na Web")
+  - sheetName: o NOME EXATO da aba dessa turma dentro da planilha
+    (copie certinho, com acento e maiúsculas/minúsculas)
+
+IMPORTANTE: os nomes de aba abaixo (sheetName) são os que eu consegui
+identificar até agora. Se algum card aparecer com erro "aba não
+encontrada", abra a planilha, confira o nome exato da aba clicando
+nela, e corrija aqui.
+=====================================================================
+-->
+<script>
+const SPREADSHEET_MANHA = "1hUMgNdMsB3Un3AZErFOje7DYHg28hFoGp35qtcbcpsI";
+const SPREADSHEET_TARDE = "1Q18zMwPf_e0b6AhR6a0h8u1FpmBGmcHoU4VmQTECfJQ";
+
+const TURMAS_CONFIG = [
+  // ---------- MANHÃ ----------
+  { turno:"Manhã", serie:"6º", turma:"6º A/B", spreadsheetId: SPREADSHEET_MANHA, sheetName:"6º A/B" },
+  { turno:"Manhã", serie:"7º", turma:"7º A/B", spreadsheetId: SPREADSHEET_MANHA, sheetName:"7º A/B" },
+  { turno:"Manhã", serie:"8º", turma:"8º A/B", spreadsheetId: SPREADSHEET_MANHA, sheetName:"8º A/B" },
+  { turno:"Manhã", serie:"9º", turma:"9º A/B", spreadsheetId: SPREADSHEET_MANHA, sheetName:"9º A/B" },
+
+  // ---------- TARDE ----------
+  { turno:"Tarde", serie:"1º", turma:"1º C",   spreadsheetId: SPREADSHEET_TARDE, sheetName:"1º C" },
+  { turno:"Tarde", serie:"1º", turma:"1º A/B", spreadsheetId: SPREADSHEET_TARDE, sheetName:"1º A/B" },
+  { turno:"Tarde", serie:"2º", turma:"2º A",   spreadsheetId: SPREADSHEET_TARDE, sheetName:"2º A" },
+  { turno:"Tarde", serie:"2º", turma:"2º B",   spreadsheetId: SPREADSHEET_TARDE, sheetName:"2º B" },
+  { turno:"Tarde", serie:"3º", turma:"3º A",   spreadsheetId: SPREADSHEET_TARDE, sheetName:"3º A" },
+  { turno:"Tarde", serie:"3º", turma:"3º B",   spreadsheetId: SPREADSHEET_TARDE, sheetName:"3º B" },
+  { turno:"Tarde", serie:"4º", turma:"4º A/B", spreadsheetId: SPREADSHEET_TARDE, sheetName:"4º A/B" },
+  { turno:"Tarde", serie:"5º", turma:"5º A/B", spreadsheetId: SPREADSHEET_TARDE, sheetName:"5º A/B" },
+];
+</script>
+
+<script src="app.js"></script>
 </body>
 </html>
-
