@@ -8,7 +8,7 @@
 const HOJE = new Date();
 HOJE.setHours(0, 0, 0, 0);
 
-// Fim do ano letivo — usado para estimar quantas aulas ainda faltam
+// Fim do ano letivo — usado para estimar- quantas aulas ainda faltam
 const FIM_ANO_LETIVO = new Date(2026, 11, 10); // 10/12/2026
 FIM_ANO_LETIVO.setHours(0, 0, 0, 0);
 
